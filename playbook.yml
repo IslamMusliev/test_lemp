@@ -1,0 +1,77 @@
+- name: Deploy Dockerized Web Application
+  hosts: host01
+  become: true
+  vars:
+    app_name: myapp
+    app_port: 8080
+    nginx_conf_path: /home/islam/{{ app_name }}/nginx.conf
+    nginx_service_name: nginx
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+
+    - name: Install dependencies
+      apt:
+        name:
+          - python3-pip
+          - python-dev
+          - libffi-dev
+          - gcc
+          - libssl-dev
+        state: present
+
+
+    - name: Install Docker Compose
+      pip:
+        name: docker-compose
+        state: present
+
+
+    - name: Create myapp directory
+      file:
+        path: /home/islam/myapp
+        state: directory
+
+
+    - name: Create myapp directories
+      file:
+        path: "/home/islam/myapp/{{ item }}"
+        state: directory
+      loop:
+        - nginx
+        - php
+        - mysql
+
+
+    - name: Copy Docker Compose file
+      copy:
+        src: docker-compose.yml
+        dest: /home/islam/{{ app_name }}/docker-compose.yml
+
+
+    - name: Copy Dockerfile for Nginx container
+      copy:
+        src: nginx/Dockerfile
+        dest: /home/islam/{{ app_name }}/nginx/Dockerfile
+
+
+    - name: Copy Dockerfile for PHP container
+      copy:
+        src: php/Dockerfile
+        dest: /home/islam/{{ app_name }}/php/Dockerfile
+
+
+    - name: Copy Dockerfile for MySQL container
+      copy:
+        src: mysql/Dockerfile
+        dest: /home/islam/{{ app_name }}/mysql/Dockerfile
+
+
+    - name: Start Docker Compose
+      command: docker-compose up -d
+      args:
+        chdir: /home/islam/{{ app_name }}
+
